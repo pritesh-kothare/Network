@@ -1,0 +1,225 @@
+Configure a Cisco Catalyst 9500 switch (Secondary Core Switch) as part of a redundant pair (with VRRP) for the BSM network — managing multiple VLANs, DHCP pools, flow monitoring (NetFlow), and inter-VLAN routing.
+
+⚙️ STEP-BY-STEP CONFIGURATION
+Step 1: Basic Setup
+configure terminal
+hostname BSM-Secondary-CSW
+no ip domain-lookup
+service password-encryption
+clock timezone IST 5 30
+
+Step 2: Enable Routing & VRF
+ip routing
+vrf definition Mgmt-vrf
+ address-family ipv4
+ exit-address-family
+ address-family ipv6
+ exit-address-family
+
+Step 3: Boot & Redundancy
+boot system switch all flash:packages.conf
+switch 1 provision c9500-16x
+redundancy
+ mode sso
+
+Step 4: Set DNS and Domain
+ip name-server 103.8.45.5
+ip domain name bankofbaroda.com
+
+Step 5: Configure DHCP Pools
+ip dhcp excluded-address 10.21.24.1 10.21.24.20
+ip dhcp excluded-address 10.21.28.1 10.21.28.20
+ip dhcp excluded-address 10.21.28.129 10.21.28.140
+ip dhcp excluded-address 10.21.29.1 10.21.29.10
+ip dhcp excluded-address 10.21.20.1 10.21.20.20
+
+ip dhcp pool MGMT
+ network 10.21.28.0 255.255.255.128
+ default-router 10.21.28.10
+ dns-server 103.8.45.5 202.56.230.2
+ lease 0 23
+
+ip dhcp pool Guest_Users
+ network 10.21.28.128 255.255.255.128
+ default-router 10.21.28.140
+ dns-server 208.67.222.222 208.67.220.220 103.8.45.5 202.56.230.2
+ lease 0 12
+
+ip dhcp pool Data
+ network 10.21.29.0 255.255.255.128
+ default-router 10.21.29.10
+ dns-server 103.8.45.5 202.56.230.2
+ lease 0 23
+
+ip dhcp pool Bank_Users
+ network 10.21.24.0 255.255.252.0
+ default-router 10.21.24.10
+ dns-server 208.67.222.222 208.67.220.220 103.8.45.5 202.56.230.2
+ lease 0 23
+
+ip dhcp pool Executive_Users
+ network 10.21.20.0 255.255.255.0
+ default-router 10.21.20.10
+ dns-server 208.67.222.222 208.67.220.220 202.56.230.2 103.8.45.5
+ lease 0 23
+
+Step 6: Enable NetFlow (NFA Monitoring)
+
+Define flow records, exporter, and monitors:
+
+flow record NFARecordinput
+ match ipv4 source address
+ match ipv4 destination address
+ match transport source-port
+ match transport destination-port
+ match ipv4 protocol
+ match interface input
+ match ipv4 tos
+ match flow direction
+ collect interface output
+ collect counter bytes long
+ collect counter packets long
+ collect transport tcp flags
+ collect timestamp absolute first
+ collect timestamp absolute last
+
+flow record NFARecordoutput
+ match ipv4 source address
+ match ipv4 destination address
+ match transport source-port
+ match transport destination-port
+ match ipv4 protocol
+ match interface output
+ match ipv4 tos
+ match flow direction
+ collect interface input
+ collect counter bytes long
+ collect counter packets long
+ collect transport tcp flags
+ collect timestamp absolute first
+ collect timestamp absolute last
+
+flow exporter NFAExporter
+ destination 10.21.28.20
+ source Vlan21
+ transport udp 9996
+ template data timeout 60
+
+flow monitor NFAMonitorinput
+ exporter NFAExporter
+ cache timeout active 60
+ record NFARecordinput
+
+flow monitor NFAMonitoroutput
+ exporter NFAExporter
+ cache timeout active 60
+ record NFARecordoutput
+
+Step 7: Configure Interfaces
+Management (for example)
+interface Vlan21
+ description MGMT
+ ip address 10.21.28.2 255.255.255.128
+ fhrp delay minimum 5
+ vrrp 21 address-family ipv4
+  preempt delay minimum 30
+  address 10.21.28.10 primary
+  exit-vrrp
+
+Other VLANs
+interface Vlan22
+ description Bank_users
+ ip address 10.21.24.2 255.255.252.0
+ vrrp 22 address-family ipv4
+  address 10.21.24.10 primary
+  exit-vrrp
+
+interface Vlan23
+ description Guest_users
+ ip address 10.21.28.130 255.255.255.128
+ ip access-group 110 in
+ vrrp 23 address-family ipv4
+  address 10.21.28.140 primary
+  exit-vrrp
+
+interface Vlan24
+ description Data
+ ip address 10.21.29.2 255.255.255.128
+ vrrp 24 address-family ipv4
+  address 10.21.29.10 primary
+  exit-vrrp
+
+interface Vlan25
+ description Executive_Users
+ ip address 10.21.20.2 255.255.255.0
+ vrrp 25 address-family ipv4
+  address 10.21.20.10 primary
+  exit-vrrp
+
+Step 8: Trunk Ports (Uplinks)
+
+Example for WLC and Firewalls:
+
+interface TenGigabitEthernet1/0/5
+ description BSM-Primary-WLC
+ switchport mode trunk
+
+interface TenGigabitEthernet1/0/6
+ description BSM-Secondary-WLC
+ switchport mode trunk
+
+interface TenGigabitEthernet1/0/1
+ description Primary_Firewall
+ switchport trunk native vlan 21
+ switchport mode trunk
+
+
+(Repeat for all uplinks shown in the config.)
+
+Step 9: IP Access Control (Guest VLAN)
+ip access-list extended 110
+ 10 permit ip 10.21.28.128 0.0.0.127 host 10.21.28.3
+ 20 permit ip 10.21.28.128 0.0.0.127 host 10.21.28.20
+ 30 permit ip 10.21.28.128 0.0.0.127 host 10.21.28.5
+ 40 permit ip 10.21.28.128 0.0.0.127 host 10.21.28.6
+ 50 deny ip 10.21.28.128 0.0.0.127 10.21.28.0 0.0.0.127
+ 60 deny ip 10.21.28.128 0.0.0.127 10.21.24.0 0.0.3.255
+ 70 deny ip 10.21.28.128 0.0.0.127 10.21.20.0 0.0.0.255
+ 80 deny ip 10.21.28.128 0.0.0.127 10.21.29.0 0.0.0.127
+ 90 permit ip any any
+
+Step 10: Default Route
+ip route 0.0.0.0 0.0.0.0 10.21.28.3
+
+Step 11: User Authentication
+username baroda privilege 15 password 7 0529261D71484F
+enable secret <your_secret>
+line vty 0 15
+ login local
+ transport input ssh
+
+Step 12: SNMP, NTP, and Call-Home
+snmp-server community BOB_SunTower RW
+snmp-server community BOB RO
+
+ntp server 192.168.10.1 prefer version 2
+ntp server 192.168.11.1 version 2
+
+call-home
+ contact-email-addr sch-smart-licensing@cisco.com
+ profile "CiscoTAC-1"
+  active
+  destination transport-method http
+
+Step 13: Save Configuration
+end
+write memory
+
+✅ Verification Commands
+Check	Command
+VLANs and IPs	show ip interface brief
+VRRP Status	show vrrp brief
+DHCP bindings	show ip dhcp binding
+NetFlow export	show flow exporter
+Routing	show ip route
+SNMP	show snmp community
