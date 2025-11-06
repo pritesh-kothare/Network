@@ -1,0 +1,174 @@
+🧩 Purpose of This Configuration
+
+This is a Layer 2 access/distribution switch used for Wi-Fi access and management, connected to a core switch (BSM-Primary-CSW & BSM-Secondary-CSW).
+It has:
+
+VLAN 21 as management VLAN
+
+NetFlow monitoring for traffic analysis
+
+SSH access
+
+SNMP monitoring
+
+NTP synchronization
+
+Local username for authentication
+
+⚙️ Step-by-Step Configuration for a Similar Switch
+
+Below are the exact configuration steps (clean and structured) that you can apply manually or through a configuration template on a new switch.
+
+Step 1: Basic Setup
+enable
+configure terminal
+hostname BSM-Seventh-floor-SW
+service password-encryption
+no aaa new-model
+clock timezone IST 5 30
+ip domain name bankofbaroda.com
+
+Step 2: User and Enable Passwords
+enable secret Un1c0m@2023
+username baroda privilege 15 secret Un1c0m@2023
+
+Step 3: Boot & Stack Settings
+boot system switch all flash:packages.conf
+switch 1 provision c9300-24ux
+redundancy
+ mode sso
+
+Step 4: Management VLAN Configuration
+interface Vlan21
+ description $$ MGMT $$
+ ip address 10.21.28.13 255.255.255.128
+ no shutdown
+exit
+
+ip default-gateway 10.21.28.10
+
+Step 5: Interface Configuration (Wi-Fi Access)
+
+All TenGigabitEthernet interfaces (1/0/1–1/0/22) are trunk ports carrying VLANs 21–25 for Wi-Fi APs.
+
+interface range TenGigabitEthernet1/0/1-22
+ description $$ Wi-Fi_AP $$
+ switchport trunk native vlan 21
+ switchport trunk allowed vlan 21-25
+ switchport mode trunk
+ ip flow monitor NFAMonitorinput input
+ ip flow monitor NFAMonitoroutput output
+exit
+
+
+Ports 23 and 24 are access ports:
+
+interface TenGigabitEthernet1/0/23
+ switchport access vlan 21
+ switchport mode access
+exit
+
+interface TenGigabitEthernet1/0/24
+ switchport access vlan 22
+ switchport mode access
+exit
+
+Step 6: Uplink Ports (to Core Switches)
+interface TenGigabitEthernet1/1/7
+ description $$ BSM-Primary-CSW $$
+ switchport trunk native vlan 21
+ switchport mode trunk
+exit
+
+interface TenGigabitEthernet1/1/8
+ description $$ BSM-Secondary-CSW $$
+ switchport trunk native vlan 21
+ switchport mode trunk
+exit
+
+Step 7: Spanning Tree Configuration
+spanning-tree mode rapid-pvst
+spanning-tree portfast default
+spanning-tree extend system-id
+
+Step 8: NetFlow Monitoring
+flow record NFARecordinput
+ match ipv4 source address
+ match ipv4 destination address
+ match transport source-port
+ match transport destination-port
+ match ipv4 protocol
+ match interface input
+ match ipv4 tos
+ match flow direction
+ collect interface output
+ collect counter bytes long
+ collect counter packets long
+ collect transport tcp flags
+ collect timestamp absolute first
+ collect timestamp absolute last
+exit
+
+flow exporter NFAExporter
+ destination 10.21.28.20
+ source Vlan21
+ transport udp 9996
+ template data timeout 60
+exit
+
+flow monitor NFAMonitorinput
+ exporter NFAExporter
+ cache timeout active 60
+ record NFARecordinput
+exit
+
+flow monitor NFAMonitoroutput
+ exporter NFAExporter
+ cache timeout active 60
+ record NFARecordoutput
+exit
+
+Step 9: SNMP Configuration
+snmp-server community BOB_SunTower RW
+snmp-server community BOB RO
+
+Step 10: SSH Configuration
+ip ssh version 2
+ip ssh time-out 60
+ip ssh logging events
+
+line vty 0 15
+ login local
+ transport input ssh
+ logging synchronous
+
+Step 11: NTP and Call Home
+ntp server 192.168.12.1 prefer version 2
+ntp server 192.168.13.1 version 2
+service call-home
+call-home
+ contact-email-addr sch-smart-licensing@cisco.com
+ profile "CiscoTAC-1"
+  active
+  destination transport-method http
+exit
+
+Step 12: Save Configuration
+end
+write memory
+
+
+or
+
+copy running-config startup-config
+
+🧠 Verification Commands
+Purpose	Command
+Interface summary	show ip interface brief
+VLANs configured	show vlan brief
+Trunk ports	show interfaces trunk
+Flow exporter status	show flow exporter
+SNMP config	show snmp community
+NTP status	show ntp associations
+Verify SSH	show ip ssh
+Save check	show startup-config
