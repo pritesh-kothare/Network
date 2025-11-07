@@ -1,0 +1,39 @@
+
+en
+configt
+hostname switch1
+en passwrd Cisco
+exit
+exit
+sh vlan
+config t
+vlan 30
+name it
+exit
+valn 20
+name support
+exit
+
+sh vlan
+
+config t
+int f0/1 
+switchport access vlan 10
+interface range f 0/2-10
+switchport access vlan 10
+sh vlan
+
+interface range fastenthernet 0/12-20
+switchport access valan 20
+
+intrface range faste 0/22-30
+switcport access vlan 30
+exit
+
+
+int vlan 10 
+ip add 10.21.28.22 255.255.0
+
+interfa vlan 20
+ip adde 10.21.25.25
+
