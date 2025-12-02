@@ -3,6 +3,9 @@ enable
 config terminal
 hostname pritesh -- assign hostnsme
 enable password admin   - - set enable password
+clock timezone IST 5 30
+ip domain name bankofbaroda.com
+
 show vlan ---check vlan status
 calnfig t
 vlan 21 --- create valan number
