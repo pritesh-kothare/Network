@@ -1,1 +1,7 @@
-hhg
+cisco basic configration
+enable
+config terminal
+hostname pritesh -- assign hostnsme
+enable password admin   - - set enable password
+
+
