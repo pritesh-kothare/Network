@@ -3,5 +3,227 @@ enable
 config terminal
 hostname pritesh -- assign hostnsme
 enable password admin   - - set enable password
+show vlan ---check vlan status
+calnfig t
+vlan 21 --- create valan number
+name salle  -- assign vlan number
+vlan 22
+name HR
+vlan 25 
+name WIFI 
+how to assign interface on vlan ( switch to swich we need to assihgn vlan interface if there is any amchin PC,Laptop WE need to assign accces port )
+config t
+interface fastethernet 0/1  -  - single port assign to valan
+switch mode access 
+switchport access valan 10
+exit
+
+how to add multiple port at valan
+
+interface range fastethernet 0/2-12
+switch mode accesss 
+switchport access valan 10
+interface range fastethernet f0/13-20
+switch mode access
+switchport access  valan 30
+
+how to ip address to vlan
+intrface vlan 10
+ip add 10.21.28.1 255.255.25.0
+
+interface vlan 21
+ip add 10.21.2/8.2 255.255.255.0
+
+
+show ip interface briefe  - - check all interface 
+
+ip routing  --- 
+
+
+
+🔶 What is VLAN (Virtual Local Area Network)?
+
+A VLAN is a virtual network created inside a single physical switch.
+It logically separates devices into different networks even if they are connected to the same switch.
+
+Think of it like creating multiple separate rooms inside one big hall.
+
+🔶 Why VLAN is Needed?
+
+Without VLANs, all devices in a switch are in the same network, can talk to each other directly → not secure and causes broadcast traffic.
+
+VLANs help to:
+
+✔ Separate networks
+✔ Improve security
+✔ Reduce broadcast traffic
+✔ Segment users (Wi-Fi, Servers, CCTV, Guest network etc.)
+✅ 3. For Security & Isolation
+
+VLANs create boundaries:
+✔ CCTV cameras → VLAN 40
+✔ Biometric machines → VLAN 50
+✔ IoT devices → VLAN 60
+
+These devices cannot talk to corporate network.
+
+✅ 4. For Voice (IP Phones)
+
+Switch ports carry:
+
+Data VLAN (PC traffic)
+
+Voice VLAN (Phone traffic)
+
+Example:
+
+switchport access vlan 10
+switchport voice vlan 200
+
+✅ 5. For Trunk Links Between Switches
+
+When many VLANs need to be carried between switches → use trunk ports.
+
+Example:
+
+Switch to core switch
+
+Switch to Access Points
+
+Switch to Firewall
+
+switchport mode trunk
+switchport trunk allowed vlan 10,20,30,21-25
+
+🔶 Types of VLANs
+VLAN Type	Use
+Access VLAN	For end devices (PC, Printer, CCTV)
+Voice VLAN	IP phones
+Management VLAN	Switch/WLC management (like VLAN 21)
+Native VLAN	Used on trunk ports
+Trunk VLANs	Carry multiple VLANs between switches
+🔶 Simple Example
+
+📌 Without VLANs:
+Everyone is in 192.168.1.0 → very insecure.
+
+📌 With VLANs:
+
+HR: 192.168.10.0
+
+Finance: 192.168.20.0
+
+WiFi Corporate: 10.21.28.0
+
+Guest: 10.25.10.0
+
+Each is isolated by the switch + ACLs + firewall.
+
+🔶 Summary
+✔ VLAN = Logical separation inside a switch
+✔ Used to segment users, Wi-Fi, servers, cameras
+✔ Essential for security, performance, and management
+✔ Used everywhere: switches, routers, firewalls, WLCs
+
+If you want, I can also explain:
+
+🔸 What is trunk vs access port
+🔸 What is native VLAN
+🔸 How VLAN works with Cisco Catalyst 9800 WLC
+🔸 Real-time diagram showing VLAN flow
+
+
+VLAN Trunking
+
+interface g1/0/49
+ switchport mode trunk
+ switchport trunk allowed vlan 10,20
+
+
+🔶 What is VTP (VLAN Trunking Protocol)?
+
+VTP is a Cisco proprietary protocol used to manage VLANs across multiple switches automatically.
+
+It allows you to:
+
+✔ Create VLANs on one switch
+✔ Automatically send those VLANs to all other switches in the network
+✔ Keep VLAN names and IDs consistent
+
+📌 VTP is used only between switches connected using trunk ports.
+
+🔶 Why VTP Is Used?
+
+Without VTP → You must manually create VLANs on every switch.
+
+With VTP → You create VLANs only once (on the server switch), and they automatically propagate.
+
+✔ Saves time
+✔ Prevents mistakes
+✔ Ensures consistency
+
+🔶 VTP Modes
+
+There are three main modes:
+
+Mode	Purpose
+Server	Can create/modify/delete VLANs → distributes to all switches
+Client	Cannot create VLANs → only receives VLAN info
+Transparent	Does NOT participate in VTP but forwards VTP packets
+🔶 VTP Domain
+
+All switches must be in the same VTP domain name to participate.
+
+Example:
+
+vtp domain BOB-Network
+
+🔶 VTP Version
+
+VTP has 3 versions:
+
+Version	Use
+V1	Basic VLAN propagation
+V2	Token Ring support (old)
+V3	Supports extended VLANs (1006–4096), more secure
+
+Best practice: Use VTP Version 3.
+
+🔶 How VTP Works (Simple)
+
+1️⃣ Switch in server mode creates a VLAN
+2️⃣ VLAN information is carried over trunk ports
+3️⃣ Other switches in client mode automatically learn VLANs
+4️⃣ All switches stay synchronized
+
+🔶 VTP Pruning
+
+VTP pruning reduces unnecessary VLAN traffic on trunks.
+
+Example:
+✔ If VLAN 30 does not exist on Switch-2
+✔ Trunk will stop sending VLAN 30 broadcast/multicast traffic to Switch-2
+
+Command:
+
+vtp pruning
+
+🔶 VTP Configuration Example (Cisco Switch)
+Set VTP Domain Name
+vtp domain BOB-Network
+
+Set VTP Mode
+vtp mode server
+
+
+(or client / transparent)
+
+Set VTP Version
+vtp version 3
+
+Enable VTP Pruning
+vtp pruning
+
+
 
 
