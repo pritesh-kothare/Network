@@ -1,0 +1,151 @@
+access switch target
+(a) SSH (Secure Shell)
+
+Used to securely access the device.
+
+Basic Config:
+ip domain-name example.com
+crypto key generate rsa modulus 2048
+ip ssh version 2
+line vty 0 15
+ login local
+ transport input ssh
+
+(b) SNMP (Simple Network Management Protocol)
+
+Used for monitoring by tools like SolarWinds, PRTG, Cisco DNAC.
+
+Basic Config:
+snmp-server community public RO
+snmp-server community private RW
+
+(c) NTP (Network Time Protocol)
+
+Keeps device clock synchronized (important for logs).
+
+Basic Config:
+ntp server 10.1.1.1
+ntp server 10.1.1.2 prefer
+
+🔹 2. Layer 2 Protocols
+(a) STP – Spanning Tree Protocol
+
+Prevents loops in switching network.
+
+Basic Config:
+spanning-tree mode rapid-pvst
+spanning-tree portfast default
+spanning-tree extend system-id
+
+(b) VLAN & Trunking
+
+Segmentation of network.
+
+Basic Config:
+vlan 10
+ name USERS
+vlan 20
+ name SERVERS
+
+interface range g1/0/1-48
+ switchport mode access
+ switchport access vlan 10
+
+interface g1/0/49
+ switchport mode trunk
+ switchport trunk allowed vlan 10,20
+
+(c) LACP / EtherChannel
+
+Used for bundling ports.
+
+Basic Config:
+interface range g1/0/1-2
+ channel-group 1 mode active
+
+🔹 3. Layer 3 Protocols
+(a) Static Routing
+ip route 0.0.0.0 0.0.0.0 10.1.1.1
+
+(b) Dynamic Routing (OSPF, EIGRP)
+
+Used on L3 switches and routers.
+
+OSPF Basic:
+router ospf 1
+ network 10.1.1.0 0.0.0.255 area 0
+
+🔹 4. Security Protocols
+(a) DHCP Snooping
+
+Protects from rogue DHCP servers.
+
+ip dhcp snooping
+ip dhcp snooping vlan 10,20
+interface g1/0/48
+ ip dhcp snooping trust
+
+(b) Dynamic ARP Inspection (DAI)
+
+Protects against ARP spoofing.
+
+ip arp inspection vlan 10,20
+interface g1/0/48
+ ip arp inspection trust
+
+(c) Port Security
+
+Used on access ports to limit connected devices.
+
+interface g1/0/10
+ switchport mode access
+ switchport port-security
+ switchport port-security maximum 2
+ switchport port-security violation restrict
+
+🔹 5. Monitoring Protocols
+(a) NetFlow
+
+Traffic visibility.
+
+flow exporter NetFlow1
+ destination 10.1.1.50
+ source vlan 10
+
+(b) Syslog
+
+Send logs to a central server.
+
+logging host 10.1.1.20
+logging trap warnings
+
+🔹 6. Wireless Controller (Cisco 9800) Specific Protocols
+(a) CAPWAP
+
+Used between APs and WLC.
+No manual config; AP discovers WLC automatically (DHCP option 43, DNS, or L2 discovery).
+
+(b) RADIUS / TACACS+
+
+Used for user authentication on WiFi.
+
+Example:
+aaa new-model
+radius server ISE1
+ address ipv4 10.5.5.5 auth-port 1812 acct-port 1813
+ key C!sco123
+
+🔹 7. High Availability / Redundancy Protocols
+(a) HSRP / VRRP
+
+First hop redundancy.
+
+interface vlan 10
+ standby 1 ip 10.1.1.1
+
+(b) SSO / StackWise
+
+For switches:
+
+redundancy
+ mode sso
