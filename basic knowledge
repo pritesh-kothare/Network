@@ -26,6 +26,9 @@ how to add multiple port at valan
 interface range fastethernet 0/2-12
 switch mode accesss 
 switchport access valan 10
+
+STP (spaning tree protocol)
+
 interface range fastethernet f0/13-20
 switch mode access
 switchport access  valan 30
@@ -228,5 +231,38 @@ Enable VTP Pruning
 vtp pruning
 
 
+Spanning Tree Protocol (STP) is a network protocol used in Layer 2 (switching) to prevent loops in a network that has redundant links.
 
+🕸️ Why do we need STP?
+
+In a network with multiple switches, redundant links are used for backup.
+But Layer 2 doesn’t have TTL (Time To Live) like IP, so a broadcast frame can loop endlessly, causing:
+
+Broadcast storms
+
+MAC address table instability
+
+Network crash
+
+👉 STP automatically detects loops and blocks extra paths, keeping only one active path.
+
+🔧 How STP Works (Simple Explanation)
+1️⃣ Elect Root Bridge
+
+All switches choose one as the Root Bridge (center of the network).
+Lowest Bridge ID (Priority + MAC) wins.
+
+2️⃣ Calculate Best Path
+
+Each switch calculates the best path to the Root Bridge using STP messages (BPDUs).
+
+3️⃣ Block Redundant Links
+
+To prevent loops, STP blocks ports that would create a loop.
+
+📦 Port Roles in STP
+Port Role	Function
+Root Port (RP)	Best path to Root Bridge
+Designated Port (DP)	Forwarding port for a network segment
+Blocked / Non-Designated Port	Prevents loops
 
