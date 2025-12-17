@@ -266,3 +266,8 @@ Root Port (RP)	Best path to Root Bridge
 Designated Port (DP)	Forwarding port for a network segment
 Blocked / Non-Designated Port	Prevents loops
 
+spanning-tree mode rapid-pvst
+spanning-tree extend system-id
+spanning-tree vlan 1-4094 priority 4096
+
+
