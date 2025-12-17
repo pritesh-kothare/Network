@@ -270,4 +270,13 @@ spanning-tree mode rapid-pvst
 spanning-tree extend system-id
 spanning-tree vlan 1-4094 priority 4096
 
-
+NTP 
+Network Time Protocol
+It is used to synchronize time between computers, servers, switches, routers, and network devices over a network.
+How to configure NTP
+configure terminal
+clock timezone IST 5 30
+ntp server 10.10.10.10
+ntp server 10.10.10.11
+end
+ “NTP has been configured on all network devices using internal authenticated NTP servers to ensure accurate system time, reliable log correlation, and compliance with RBI security guidelines.”
