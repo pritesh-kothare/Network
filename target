@@ -11,10 +11,12 @@ line vty 0 15
  login local
  transport input ssh
 
-(b) SNMP (Simple Network Management Protocol)
+(b) SNMP (Simple Network Management Protocol) switch router server 
+it work with UDP working with 161 & 162
+upto working 3 version 1) get meassage 2) set meassage 3) trap message 
+it use server & client base model it  use for minitoring troubleshoot 
 
 Used for monitoring by tools like SolarWinds, PRTG, Cisco DNAC.
-
 Basic Config:
 snmp-server community public RO
 snmp-server community private RW
@@ -22,13 +24,16 @@ snmp-server community private RW
 (c) NTP (Network Time Protocol)
 
 Keeps device clock synchronized (important for logs).
-
+port =123/udp
 Basic Config:
 ntp server 10.1.1.1
 ntp server 10.1.1.2 prefer
 
 🔹 2. Layer 2 Protocols
 (a) STP – Spanning Tree Protocol
+is a open standerds its IEEE its stp 802.1d
+Bridge id = priority + MAC address 
+BPDU = Bridge Protocol Data Unit
 
 Prevents loops in switching network.
 
